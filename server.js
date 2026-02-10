@@ -1,13 +1,11 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
 
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
-
-// 🔥 THIS IS THE IMPORTANT PART
+// ✅ Verify webhook (GET)
 app.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
@@ -15,19 +13,25 @@ app.get('/webhook', (req, res) => {
 
   if (mode === 'subscribe' && token === VERIFY_TOKEN) {
     console.log('Webhook verified');
-    res.status(200).send(challenge); // MUST return challenge
-  } else {
-    res.sendStatus(403);
+    return res.status(200).send(challenge);
   }
+
+  return res.sendStatus(403);
 });
 
+// ✅ Receive messages (POST)
+app.post('/webhook', (req, res) => {
+  console.log("Incoming:", JSON.stringify(req.body, null, 2));
+  return res.sendStatus(200);
+});
 
-// test route
+// ✅ Test route
 app.get('/', (req, res) => {
   res.send('Bot running');
 });
 
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log('Server started');
+// ✅ Start server (LAST)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log('Server started on port', PORT);
 });
